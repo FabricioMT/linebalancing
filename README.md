@@ -1,4 +1,8 @@
+Guia De Execução
 First put your file in dir /Inputs/
+
+1 - install_requeriments.bat
+2 - run_exec-venv.bat 
 
 Sintaxe of Input
 
