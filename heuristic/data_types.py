@@ -28,7 +28,6 @@ class Task:
         return str(self.task_id)
  
 class TaskListClass(list):
-    def item(self,x): return self[x]
 
     def prev(self, x):
         if self.is_first(x):
@@ -329,11 +328,11 @@ class DataRandomParams(Data):
         random.seed(self.seed)
 
         aux_job = jobs.copy()
-        #print(preced)
-        precedence = TaskListClass()
-        TaskDiv =  int(len(preced)/len(machines))
+        #print(preced)     
+        TaskDiv =  int(len(jobs)/len(machines))
+        print(TaskDiv)
 
-        for m in machines:    
+        for m in machines:
             while len(aux_job) >= 1:
                 rand_job = random.choice(aux_job)      
                 aux_suces = rand_job.succ.copy()
@@ -342,28 +341,21 @@ class DataRandomParams(Data):
                     #print(f'Tarefa {rand_job.task_id}: Custo = {rand_job.cost} Pred = {[pred.task_id for pred in rand_job.pred]} Suces = {[succ.task_id for succ in rand_job.succ]}')
                     m.add_job(rand_job)
                     rand_job.assign_machine(m)
-                    precedence.append(rand_job)
                     aux_job.remove(rand_job)
                     break
                 
-                # if rand_job.succ == []:
-                #     m.add_job(rand_job)
-                #     rand_job.assign_machine(m)
-                #     precedence.append(rand_job)
-                #     aux_job.remove(rand_job)
-                #     break
-
                 if rand_job.pred in aux_job:
                     break
                 else:
                     m.add_job(rand_job)
                     rand_job.assign_machine(m)
-                    precedence.append(rand_job)
                     aux_job.remove(rand_job)
                     #print(jobs)
-                    #print(f'Tarefa {rand_job.task_id}: Custo = {rand_job.cost} Pred = {[pred.task_id for pred in rand_job.pred]} Suces = {[succ.task_id for succ in rand_job.succ]}')
-                if len(m.jobs) == TaskDiv:
+                    #print(f'Tarefa {rand_job.task_id}: Custo = {rand_job.cost} Pred = {[pred.task_id for pred in rand_job.pred]} Suces = {[succ.task_id for succ in rand_job.succ]}')          
+                
+                if len(m.jobs) == TaskDiv:        
                     break
-        return precedence
+                
+                
     
 
