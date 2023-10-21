@@ -43,11 +43,11 @@ def readArgs():
         n_machine = int(sys.argv[2])
         file_input = listdir('./inputs/')
 
-        if n_machine >= 6:
+        if n_machine >= 3:
             pass
         else:
             print("Número de Maquinas muito baixo !")
-            n_machine = 6
+            n_machine = 3
             print("Número de Maquinas set default = 6.")
         
         for file in file_input:
@@ -66,15 +66,13 @@ def readArgs():
     return arq, n_machine
 
 
-
-    return init_sol
-
 def printdata(Data: Data):
     #print('Maquinas:',Data.machines)
-    #for task in Data.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
+    for task in Data.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
     print('\n')
     #print('pair_cost:',Data.pair_cost.items())
     for machine in Data.machines: print(f'Maquina: [{machine.key}] Tarefas Atendidas: {machine.jobs}\nCusto total da Maquina: {machine.total_cost}')
+    print('\n')
 
 def calculate_makespan(machines):
     return max([machine.total_cost for machine in machines])
@@ -86,7 +84,7 @@ if __name__ == '__main__':
 
     inputs, n_machine = readArgs()
     data = assign_data(inputs,n_machine)
-
+    #printdata(data)
     ramd = DataRandomParams(data)
     printdata(ramd)
     FO = calculate_makespan(ramd.machines)

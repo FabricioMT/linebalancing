@@ -4,6 +4,7 @@ import copy
 import random
 
 class Task:
+
     def __init__(self, task_id):
         self.task_id = int(task_id)
         self.pred = []
@@ -20,7 +21,6 @@ class Task:
     def assign_machine(self, machine):
         self.machine = machine
         
-    
     def assign_cost(self, cost: int):
         self.cost = cost
     
@@ -63,13 +63,8 @@ class TaskListClass(list):
 
 class Machine:
     
-    def __init__(
-        self,
-        key,
-        jobs=None,
-    ) -> None:
-        if jobs is None:
-            jobs = TaskListClass()
+    def __init__(self, key,jobs=None) -> None:
+        if jobs is None: jobs = TaskListClass()
         self.key = key
         self.jobs = jobs
         self.total_cost = 0
@@ -80,6 +75,8 @@ class Machine:
     def add_job(self, job):
         self.jobs.append(job)
         self.total_cost = self.total_cost + job.cost
+        print(f'Job: {job.task_id} assign in Machine: {self.key}')
+
 
 class Data:
     def __init__(self, machines: list[Machine], jobs: list[Task], seq: dict):
@@ -87,6 +84,24 @@ class Data:
         self.machines = machines
         self.task = jobs
         self.precedences = seq
+
+def find_next_task(list_jobs:list[Task],task:Task):
+    print('find_next_task')
+    print(list_jobs)
+    print('current task',task)
+    print(task.pred)
+    print(task.succ)
+
+    for job in list_jobs:
+        if task.pred not in list_jobs:
+            job_pred_mch = job.pred[0].machine
+            aux_succ = job.pred
+            #print(aux_succ)
+
+
+            #if aux_succ[0] not in list_jobs
+
+
 
 class DataRandomParams(Data):
 
@@ -97,8 +112,7 @@ class DataRandomParams(Data):
         machines = params.machines
         precedences = params.precedences
         self.seq = self._random_sequences(machines,task,precedences)
-        
-
+    
     def restart(self):
         self.__init__(self)
 
@@ -106,30 +120,33 @@ class DataRandomParams(Data):
         random.seed(self.seed)
 
         aux_job = jobs.copy()
-        #print(preced)     
+        #print(aux_job)
+        #print(job)     
         TaskDiv =  int(len(jobs)/len(machines))
 
-        for m in machines:
-            while len(aux_job) >= 1:
-                rand_job = random.choice(aux_job)  
-                aux_suces = rand_job.succ.copy()
-
-                if rand_job.pred == []:
-                    #print(f'Tarefa {rand_job.task_id}: Custo = {rand_job.cost} Pred = {[pred.task_id for pred in rand_job.pred]} Suces = {[succ.task_id for succ in rand_job.succ]}')
-                    m.add_job(rand_job)
-                    rand_job.assign_machine(m)
-                    aux_job.remove(rand_job)
+        while len(aux_job) >= 1:
+            
+            #print(f'Tarefa {job.task_id}: Custo = {job.cost} Pred = {[pred.task_id for pred in job.pred]} Suces = {[succ.task_id for succ in job.succ]}')
+            for m in machines:
+                job = aux_job
+                print('current task',job)
+                if job.pred == []:
+                    #print(f'Tarefa {job.task_id}: Custo = {job.cost} Pred = {[pred.task_id for pred in job.pred]} Suces = {[succ.task_id for succ in job.succ]}')
+                    m.add_job(job)
+                    job.assign_machine(m)
+                    aux_job.remove(job)
                     break
-                
-                if rand_job.pred in aux_job:
+                    
+                print('job.pred',job.pred)
+                #for job in job.pred:
+                    
+                if job.pred in aux_job:                  
                     break
                 else:
-                    m.add_job(rand_job)
-                    rand_job.assign_machine(m)
-                    aux_job.remove(rand_job)
-                    #print(jobs)
-                    #print(f'Tarefa {rand_job.task_id}: Custo = {rand_job.cost} Pred = {[pred.task_id for pred in rand_job.pred]} Suces = {[succ.task_id for succ in rand_job.succ]}')          
-                
+                    m.add_job(job)
+                    job.assign_machine(m)
+                    aux_job.remove(job)
+                    
                 if len(m.jobs) == TaskDiv:        
                     break
                 
