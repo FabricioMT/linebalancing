@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
     inputs, n_machine = readArgs()
     data = assign_data(inputs,n_machine)
-    #printdata(data)
+    printdata(data)
     ramd = DataRandomParams(data)
     printdata(ramd)
     FO = calculate_makespan(ramd.machines)
