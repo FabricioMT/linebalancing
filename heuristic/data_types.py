@@ -26,6 +26,7 @@ class Task:
     
     def __repr__(self) -> str:
         return str(self.task_id)
+
  
 class TaskListClass(list):
 
@@ -60,6 +61,11 @@ class TaskListClass(list):
             super().append(__object)
         else:
             pass
+    
+    def __len__(self) -> int:
+        return super().__len__()
+    
+
 
 class Machine:
     
@@ -76,6 +82,9 @@ class Machine:
         self.jobs.append(job)
         self.total_cost = self.total_cost + job.cost
         print(f'Job: {job.task_id} assign in Machine: {self.key}')
+    
+    def __len__(self) -> int:
+        return super().__len__()
 
 
 class Data:
@@ -85,7 +94,7 @@ class Data:
         self.task = jobs
         self.precedences = seq
 
-def find_next_task(M:Machine,list_jobs:list[Task],task:Task):
+def find_next_task(list_jobs:Task,task:Task):
     print('find_next_task')
     print(list_jobs)
     print('current task',task)
@@ -93,14 +102,10 @@ def find_next_task(M:Machine,list_jobs:list[Task],task:Task):
     print(task.pred)
     print(task.succ)
     x = 1
-
-    if task.pred == []:
-        M.add_job(task)
-        task.assign_machine(M)
-        list_jobs.remove(task)
-        return task.succ[0]
-
+    task.pred = set(task.pred)
+    list_jobs = set(list_jobs)
     if task.pred not in list_jobs:
+        
         for job in task.pred:
             task_pred_mch = job.machine
         task_pred_mch.add_job(task)
@@ -139,10 +144,31 @@ class DataRandomParams(Data):
         while len(aux_job) >= 1:
             job = aux_job[0]     
             #print(f'Tarefa {job.task_id}: Custo = {job.cost} Pred = {[pred.task_id for pred in job.pred]} Suces = {[succ.task_id for succ in job.succ]}')
-            for m in machines:    
-                ret = find_next_task(m,aux_job,job) 
+            for m in machines:
+                if job.pred == []:
+                    m.add_job(job)
+                    job.assign_machine(m)
+                    aux_job.remove(job)
+                    job = job.succ[0]  
+
+                if job.succ == []:
+                    for tasks in job.pred:
+                        if tasks.machine is None:
+                            job = tasks
+                    m.add_job(job)
+                    job.assign_machine(m)
+                    aux_job.remove(job)
+                    job = job.succ[0]
+    
+                ret = find_next_task(aux_job,job) 
                 print('next job',ret)
                 job = ret
+        
+                if len(m.jobs) != TaskDiv:
+                    m.add_job(job)
+                    job.assign_machine(m)
+                    aux_job.remove(job)
+                else: break
     
                     
                 
