@@ -68,7 +68,7 @@ def readArgs():
 
 def printdata(Data: Data):
     #print('Maquinas:',Data.machines)
-    for task in Data.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
+    #for task in Data.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
     print('\n')
     #print('pair_cost:',Data.pair_cost.items())
     for machine in Data.machines: print(f'Maquina: [{machine.key}] Tarefas Atendidas: {machine.jobs}\nCusto total da Maquina: {machine.total_cost}')
@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
     inputs, n_machine = readArgs()
     data = assign_data(inputs,n_machine)
-    printdata(data)
+    #printdata(data)
     ramd = DataRandomParams(data)
     printdata(ramd)
     FO = calculate_makespan(ramd.machines)
