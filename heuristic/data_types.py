@@ -3,6 +3,8 @@ import numpy as np
 import copy
 import random
 from collections import UserList
+from itertools import *
+from queue import PriorityQueue
 
 class Task:
 
@@ -27,9 +29,7 @@ class Task:
     
     def __repr__(self) -> str:
         return str(self.task_id)
-    
 
- 
 class TaskListClass(list):
 
     def prev(self, x):
@@ -68,10 +68,6 @@ class TaskListClass(list):
         return super().__len__()
 
     
-    # def __iter__(self):
-    #     for i in range(self.__getitem__()):
-    #         yield 'Task: %d' % (i+1)
-    
 class Machine:
     
     def __init__(self, key,jobs=None) -> None:
@@ -84,9 +80,11 @@ class Machine:
         return str(self.__dict__)
     
     def add_job(self, job):
-        self.jobs.append(job)
-        self.total_cost = self.total_cost + job.cost
-        print(f'Job: {job.task_id} assign in Machine: {self.key}')
+        if job.machine is None:
+            self.jobs.append(job)
+            job.assign_machine(self.key)
+            self.total_cost = self.total_cost + job.cost
+            print(f'Job: {job.task_id} assign in Machine: {self.key}')
     
     def __len__(self) -> int:
         return super().__len__()
@@ -99,19 +97,14 @@ class Data:
         self.task = jobs
         self.precedences = seq
 
-def find_next_task(list_jobs:Task,task:Task,candidate_succ):
+def find_next_task(list_jobs:Task,task:Task):
     print('find_next_task')
     print(list_jobs)
-    print('candidate_succ',candidate_succ)
     print('current task',task)
     print('task machine',task.machine)
     print(task.pred)
     print(task.succ)
 
-    if candidate_succ is None:
-        print('CPUY',candidate_succ)
-        candidate_succ = list_jobs.copy()
-        print('CPUY2',candidate_succ)
         
     aux_pred = set(task.pred)
     aux_succ = set(task.succ)
@@ -139,11 +132,12 @@ def find_next_task(list_jobs:Task,task:Task,candidate_succ):
     #return task
         
 
-def pin_job(job:Task,machine:Machine, job_list:list[Task]):
-    if job.machine is None:
-        machine.add_job(job)
-        job.assign_machine(machine)
-        job_list.remove(job)
+def pin_job(job:Task,machine:Machine, job_list:list[Task],DivMod):
+    if len(machine.jobs) <= DivMod:   
+        if job.machine is None:
+            machine.add_job(job)
+            job_list.remove(job)
+
 
 def machine_check(machine:Machine,list_machine:TaskListClass[Machine]):
     print('machine_check Machine',machine)
@@ -172,6 +166,12 @@ def machine_check(machine:Machine,list_machine:TaskListClass[Machine]):
     
     return machine_info
 
+def intersection(task_pred_list:list[Task],aux_job:list[Task]):
+    aux_tasklist= set(task_pred_list)
+    aux_job_list= set(aux_job)
+    result = aux_tasklist.intersection(aux_job_list)
+    print('result',result)
+
 class DataRandomParams(Data):
 
     def __init__(self, params: Data):
@@ -180,67 +180,51 @@ class DataRandomParams(Data):
         task = params.task
         machines = params.machines
         precedences = params.precedences
-        self.seq = self._random_sequences(machines,task,precedences)
+        self.seq = self._create_solution(machines,task,precedences)
     
     def restart(self):
         self.__init__(self)
 
-    def _random_sequences(self, machines: list[Machine], jobs :list[Task],preced):
+    def _create_solution(self, machines: list[Machine], jobs :list[Task],preced):
         random.seed(self.seed)
-        x = 1 
-        aux_job = jobs.copy()
+        aux_job_list = jobs.copy()
         aux_machines = TaskListClass(machines.copy())
-        TaskDiv =  int(len(jobs)/len(machines))
-        mch_info = {}
-        job = aux_job[0]
-        candidate_succ = []
-        while len(aux_job) >= 1:
-            
-            for m in aux_machines:
-                mch_info = machine_check(m,aux_machines)
-                if len(m.jobs) >= TaskDiv:
-                    mch_info = machine_check(m,aux_machines)
-                    old_mch = mch_info['succ']
-                    aux_machines.remove(m)
-                    candidate_succ = old_mch
-                    print(candidate_succ)
-                    break
 
-                if job.pred == []:
-                    pin_job(job,m,aux_job)
-                    job = find_next_task(aux_job,job,candidate_succ)
-                    break
-                    
-
-                if job.succ == []:
-                    for i in job.pred:
-                        if i.machine is None:
-                            pin_job(i,m,aux_job)
-                            job = find_next_task(aux_job,i,candidate_succ)
-                else:
-                    for i in job.pred:
-                        if i.machine is None:
-                            pin_job(i,m,aux_job)
-                            job = find_next_task(aux_job,job,candidate_succ)
-                        pin_job(job,m,aux_job)
-                        job = find_next_task(aux_job,job,candidate_succ)
-                       
-
-                #job = find_next_task(aux_job,job,candidate_succ)
+        DivMod = int(len(jobs)/len(machines))
+        resto = len(jobs)%len(machines)
+        print(DivMod)
+        print(resto)
         
-                #assert x == 0
-                print('ATT aux_job',aux_job)
-                print('Next Job',job)
-                print('machine info',mch_info)
+        for machine in aux_machines:    
+            for key,task in (preced.items()):
+                pred,succ = task[0],task[1]
 
-                if mch_info['succ'] is None:
-                    candidate_succ = aux_job
+                pin_job(pred,machine,aux_job_list,DivMod)
+  
+                if succ.pred not in aux_job_list:  
+                    for job in succ.pred:
+                        if job.machine is None:
+                            pin_job(job,machine,aux_job_list,DivMod)
 
-                for cand in candidate_succ:
-                    if job == cand:        
-                        pin_job(job,m,aux_job)
-                        job = find_next_task(aux_job,job,candidate_succ)
-                        
+                if succ.succ == []:
+                    pin_job(succ,machine,aux_job_list,DivMod)
+
+                if len(machine.jobs) >= DivMod:
+                    break
+                
+
+
+            print(machine)
+            print(aux_job_list)
+
+
+
+                
+
+
+
+
+                    
                     
 
 
