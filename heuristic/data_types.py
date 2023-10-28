@@ -2,8 +2,12 @@ from typing import Any, Union
 import numpy as np
 import copy
 import random
+from collections import UserList
+from itertools import *
+from queue import PriorityQueue
 
 class Task:
+
     def __init__(self, task_id):
         self.task_id = int(task_id)
         self.pred = []
@@ -20,13 +24,12 @@ class Task:
     def assign_machine(self, machine):
         self.machine = machine
         
-    
     def assign_cost(self, cost: int):
         self.cost = cost
     
     def __repr__(self) -> str:
         return str(self.task_id)
- 
+
 class TaskListClass(list):
 
     def prev(self, x):
@@ -60,26 +63,35 @@ class TaskListClass(list):
             super().append(__object)
         else:
             pass
+    
+    def __len__(self) -> int:
+        return super().__len__()
 
+    
 class Machine:
     
-    def __init__(
-        self,
-        key,
-        jobs=None,
-    ) -> None:
-        if jobs is None:
-            jobs = TaskListClass()
+    def __init__(self, key,jobs=None) -> None:
+        if jobs is None: jobs = TaskListClass()
         self.key = key
         self.jobs = jobs
         self.total_cost = 0
+        self.slots = 0
     
     def __repr__(self) -> str:
         return str(self.__dict__)
     
     def add_job(self, job):
-        self.jobs.append(job)
-        self.total_cost = self.total_cost + job.cost
+        if job.machine is None:
+            if self.slots != 0:
+                self.jobs.append(job)
+                job.assign_machine(self.key)
+                self.total_cost = self.total_cost + job.cost
+                self.slots = self.slots - 1
+                print(f'Job: {job.task_id} assign in Machine: {self.key}')
+    
+    def __len__(self) -> int:
+        return super().__len__()
+
 
 class Data:
     def __init__(self, machines: list[Machine], jobs: list[Task], seq: dict):
@@ -87,6 +99,19 @@ class Data:
         self.machines = machines
         self.task = jobs
         self.precedences = seq
+       
+def pin_job(job:Task,machine:Machine, job_list:list[Task],DivMod):
+    div,resto = DivMod[0],DivMod[1]
+    #if len(machine.jobs) <= div:
+    if machine.slots != 0:
+        machine.add_job(job)
+        job_list.remove(job)
+
+def intersection(task_pred_list:list[Task],aux_job:list[Task]):
+    aux_tasklist= set(task_pred_list)
+    aux_job_list= set(aux_job)
+    result = aux_tasklist.intersection(aux_job_list)
+    print('result',result)
 
 class DataRandomParams(Data):
 
@@ -96,42 +121,73 @@ class DataRandomParams(Data):
         task = params.task
         machines = params.machines
         precedences = params.precedences
-        self.seq = self._random_sequences(machines,task,precedences)
-        
-
+        self.seq = self._create_solution(machines,task,precedences)
+    
     def restart(self):
         self.__init__(self)
 
-    def _random_sequences(self, machines: Machine, jobs :list[Task],preced):
+    def _create_solution(self, machines: list[Machine], jobs :list[Task],preced):
         random.seed(self.seed)
+        aux_job_list = jobs.copy()
+        aux_machines = TaskListClass(machines.copy())
 
-        aux_job = jobs.copy()
-        #print(preced)     
-        TaskDiv =  int(len(jobs)/len(machines))
+        DivMod = divmod(len(jobs),len(machines))
+        div,resto = DivMod[0],DivMod[1]
 
-        for m in machines:
-            while len(aux_job) >= 1:
-                rand_job = random.choice(aux_job)  
-                aux_suces = rand_job.succ.copy()
+        for mch in aux_machines: 
+            mch.slots = div
+            if aux_machines.is_last(mch):
+                mch.slots = div+resto            
+        for mch in aux_machines: print('mch.slots',mch)
+        
+        print(aux_job_list)
+        #print(preced.values())
+        for machine in aux_machines:
 
-                if rand_job.pred == []:
-                    #print(f'Tarefa {rand_job.task_id}: Custo = {rand_job.cost} Pred = {[pred.task_id for pred in rand_job.pred]} Suces = {[succ.task_id for succ in rand_job.succ]}')
-                    m.add_job(rand_job)
-                    rand_job.assign_machine(m)
-                    aux_job.remove(rand_job)
-                    break
+            for task in preced.values():             
+                pred,succ = task[0],task[1]
+
+                if succ.pred not in aux_job_list:
+                    for job in succ.pred:
+                        if job.machine is None:
+                            pin_job(job,machine,aux_job_list,DivMod)
+                            
+                if succ.succ == []:                
+                    for job in succ.pred:
+                        if job.machine is None:                
+                            pin_job(job,machine,aux_job_list,DivMod)
+                        else:     
+                            pin_job(succ,machine,aux_job_list,DivMod)
+
+
                 
-                if rand_job.pred in aux_job:
-                    break
-                else:
-                    m.add_job(rand_job)
-                    rand_job.assign_machine(m)
-                    aux_job.remove(rand_job)
-                    #print(jobs)
-                    #print(f'Tarefa {rand_job.task_id}: Custo = {rand_job.cost} Pred = {[pred.task_id for pred in rand_job.pred]} Suces = {[succ.task_id for succ in rand_job.succ]}')          
+
+        # while len(aux_job_list) is not 0:
+        #     for job in aux_job_list:
+        #         print('!',job)
+        #         machine.add_job(job)
+        #         aux_job_list.remove(job)
+
+        print('DivMod',div,resto)
+        print(aux_job_list)
+
+
+
                 
-                if len(m.jobs) == TaskDiv:        
-                    break
+
+
+
+
+                    
+                    
+
+
+                    
+
+
+                
+    
+                    
                 
                 
     
