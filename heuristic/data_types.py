@@ -75,16 +75,19 @@ class Machine:
         self.key = key
         self.jobs = jobs
         self.total_cost = 0
+        self.slots = 0
     
     def __repr__(self) -> str:
         return str(self.__dict__)
     
     def add_job(self, job):
         if job.machine is None:
-            self.jobs.append(job)
-            job.assign_machine(self.key)
-            self.total_cost = self.total_cost + job.cost
-            print(f'Job: {job.task_id} assign in Machine: {self.key}')
+            if self.slots != 0:
+                self.jobs.append(job)
+                job.assign_machine(self.key)
+                self.total_cost = self.total_cost + job.cost
+                self.slots = self.slots - 1
+                print(f'Job: {job.task_id} assign in Machine: {self.key}')
     
     def __len__(self) -> int:
         return super().__len__()
@@ -96,46 +99,11 @@ class Data:
         self.machines = machines
         self.task = jobs
         self.precedences = seq
-
-def find_next_task(list_jobs:Task,task:Task):
-    print('find_next_task')
-    print(list_jobs)
-    print('current task',task)
-    print('task machine',task.machine)
-    print(task.pred)
-    print(task.succ)
-
-        
-    aux_pred = set(task.pred)
-    aux_succ = set(task.succ)
-    aux_list_jobs = set(list_jobs)
-
-    outlist = aux_pred - aux_list_jobs
-    in_list = aux_succ - aux_list_jobs
-
-    print('outlist',outlist)
-    print('in_list',in_list)
-    
-    if task.pred:
-        for i in task.pred:
-            if i.machine is None:
-                return i
-    
-    if task.succ:
-        for i in task.succ:
-            if i.machine is None:
-                for x in i.pred:
-                    if x.machine is None:
-                        return x
-                return i
-            
-    #return task
-        
-
+       
 def pin_job(job:Task,machine:Machine, job_list:list[Task],DivMod):
     div,resto = DivMod[0],DivMod[1]
     #if len(machine.jobs) <= div:
-    if job.machine is None:
+    if machine.slots != 0:
         machine.add_job(job)
         job_list.remove(job)
 
@@ -164,30 +132,33 @@ class DataRandomParams(Data):
         aux_machines = TaskListClass(machines.copy())
 
         DivMod = divmod(len(jobs),len(machines))
-
         div,resto = DivMod[0],DivMod[1]
+
+        for mch in aux_machines: 
+            mch.slots = div
+            if aux_machines.is_last(mch):
+                mch.slots = div+resto            
+        for mch in aux_machines: print('mch.slots',mch)
+        
         print(aux_job_list)
-        print(preced.values())
+        #print(preced.values())
         for machine in aux_machines:
 
             for task in preced.values():             
                 pred,succ = task[0],task[1]
 
                 if succ.pred not in aux_job_list:
-                    intersection(succ.pred,aux_job_list)
                     for job in succ.pred:
                         if job.machine is None:
                             pin_job(job,machine,aux_job_list,DivMod)
-
+                            
                 if succ.succ == []:                
                     for job in succ.pred:
-                        if job.machine is None: 
+                        if job.machine is None:                
                             pin_job(job,machine,aux_job_list,DivMod)
-                        else:
+                        else:     
                             pin_job(succ,machine,aux_job_list,DivMod)
 
-                if len(machine.jobs) >= div:
-                        break
 
                 
 
