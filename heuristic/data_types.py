@@ -134,10 +134,10 @@ def find_next_task(list_jobs:Task,task:Task):
 
 def pin_job(job:Task,machine:Machine, job_list:list[Task],DivMod):
     div,resto = DivMod[0],DivMod[1]
-    if len(machine.jobs) < div:
-        if job.machine is None:
-            machine.add_job(job)
-            job_list.remove(job)
+    #if len(machine.jobs) <= div:
+    if job.machine is None:
+        machine.add_job(job)
+        job_list.remove(job)
 
 def intersection(task_pred_list:list[Task],aux_job:list[Task]):
     aux_tasklist= set(task_pred_list)
@@ -163,46 +163,41 @@ class DataRandomParams(Data):
         aux_job_list = jobs.copy()
         aux_machines = TaskListClass(machines.copy())
 
-
-        DivMod = divmod(len(preced),len(machines))
+        DivMod = divmod(len(jobs),len(machines))
 
         div,resto = DivMod[0],DivMod[1]
-        
-        
+        print(aux_job_list)
+        print(preced.values())
         for machine in aux_machines:
-            for key,task in preced.items():             
+
+            for task in preced.values():             
                 pred,succ = task[0],task[1]
 
-
-
-                if succ.pred not in aux_job_list:  
+                if succ.pred not in aux_job_list:
+                    intersection(succ.pred,aux_job_list)
                     for job in succ.pred:
                         if job.machine is None:
                             pin_job(job,machine,aux_job_list,DivMod)
 
-                if pred.succ == []:
-                    print('pred.succ',pred.succ)
-                    for job in pred.pred:
-                        if job.machine is None:
-                            pin_job(job,machine,aux_job_list,DivMod)
-           
-                if succ.succ == []:  
+                if succ.succ == []:                
                     for job in succ.pred:
-                        if job.machine is None:
+                        if job.machine is None: 
                             pin_job(job,machine,aux_job_list,DivMod)
-
+                        else:
+                            pin_job(succ,machine,aux_job_list,DivMod)
 
                 if len(machine.jobs) >= div:
                         break
+
                 
 
-        while len(aux_job_list) is not 0:
-            for job in aux_job_list:
-                machine.add_job(job)
-                aux_job_list.remove(job)
+        # while len(aux_job_list) is not 0:
+        #     for job in aux_job_list:
+        #         print('!',job)
+        #         machine.add_job(job)
+        #         aux_job_list.remove(job)
 
-        print(div,resto)
-        print(machine)
+        print('DivMod',div,resto)
         print(aux_job_list)
 
 
