@@ -81,12 +81,14 @@ if __name__ == '__main__':
 
     start = timer()
     tempo_corrido = timedelta(seconds=start)
-
     inputs, n_machine = readArgs()
+
     data = assign_data(inputs,n_machine)
-    #printdata(data)
+
     ramd = DataRandomParams(data)
+
     printdata(ramd)
+    
     FO = calculate_makespan(ramd.machines)
     print('FO de maior Custo:',FO)
 
