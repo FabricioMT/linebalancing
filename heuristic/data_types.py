@@ -67,8 +67,8 @@ class Machine:
         if jobs is None: jobs = TaskListClass()
         self.key = key
         self.jobs = jobs
-        self.total_cost = 0
         self.slots = 0
+        self.total_cost = 0
     
     def __repr__(self) -> str:
         return str(self.__dict__)
@@ -86,14 +86,12 @@ class Machine:
         return super().__len__()
 
 class Data:
-    def __init__(self, machines: list[Machine], jobs: list[Task], seq: dict):
-
+    def __init__(self, machines: list[Machine], jobs: list[Task], precedences: dict):
         self.machines = machines
         self.task = jobs
-        self.precedences = seq
+        self.precedences = precedences
        
 def pin_job(job:Task,machine:Machine, job_list:list[Task]):
-    #if len(machine.jobs) <= div:
     if machine.slots != 0:
         machine.add_job(job)
         job_list.remove(job)
@@ -111,7 +109,7 @@ class DataRandomParams(Data):
     def restart(self):
         self.__init__(self)
 
-    def _create_solution(self, machines: list[Machine], jobs :list[Task],preced):
+    def _create_solution(self, machines: list[Machine], jobs :list[Task],precendence_list):
         random.seed(self.seed)
         aux_job_list = jobs.copy()
         aux_machines = TaskListClass(machines.copy())
@@ -128,7 +126,7 @@ class DataRandomParams(Data):
         print(aux_job_list)
         for machine in aux_machines:
 
-            for task in preced.values():             
+            for task in precendence_list.values():             
                 pred,succ = task[0],task[1]
 
                 if succ.pred not in aux_job_list:
@@ -136,13 +134,13 @@ class DataRandomParams(Data):
                         if job.machine is None:
                             pin_job(job,machine,aux_job_list)
                             
-                if succ.succ == []:                
+                if succ.succ == []:             
                     for job in succ.pred:
-                        if job.machine is None:                
+                        if job.machine is None:                     
                             pin_job(job,machine,aux_job_list)
-                        else:     
+                        else:
+                            if succ not in aux_job_list: break
                             pin_job(succ,machine,aux_job_list)
-
 
 
 
