@@ -6,6 +6,10 @@ def pin_job(job:Task,machine:Machine, job_list:list[Task]):
     if machine.slots != 0:
         machine.add_job(job)
         job_list.remove(job)
+    else:
+        return print(f'Machine {machine.key} Slots {machine.slots} !')
+
+    
 
 def calculate_makespan(machines:list[Machine]):
     return max([machine.total_cost for machine in machines])
@@ -44,15 +48,24 @@ class Create_init_solution(Data):
                 if succ.pred not in aux_job_list:
                     for job in succ.pred:
                         if job.machine is None:
+                            if job.pred not in aux_job_list:
+                                for i in job.pred:
+                                    if i.machine is None:
+                                        pin_job(i,machine,aux_job_list)
                             pin_job(job,machine,aux_job_list)
-                            
-                if succ.succ == []:             
-                    for job in succ.pred:
-                        if job.machine is None:                     
+        
+                if machine.slots == 0: break
+                if succ.succ == []:         
+                    for job in succ.pred:                       
+                        if job.machine is None: 
+                            if job.pred not in aux_job_list:
+                                for i in job.pred:
+                                    if i.machine is None:
+                                        pin_job(i,machine,aux_job_list)                   
                             pin_job(job,machine,aux_job_list)
                         else:
                             if succ not in aux_job_list: break
-                            pin_job(succ,machine,aux_job_list)
+                            pin_job(succ,machine,aux_job_list)                      
 
 class Operation:
 

@@ -109,6 +109,6 @@ def busca_local(data:Data,max_steps=1000):
 
     swaps = find_swaps(G)
     #print(swaps)
-    find_best_move(G)
+    #find_best_move(G)
     #print(G.O)
 
