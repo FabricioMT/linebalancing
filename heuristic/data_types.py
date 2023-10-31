@@ -132,15 +132,26 @@ class DataRandomParams(Data):
                 if succ.pred not in aux_job_list:
                     for job in succ.pred:
                         if job.machine is None:
+                            if job.pred not in aux_job_list:
+                                for i in job.pred:
+                                    if i.machine is None:
+                                        pin_job(i,machine,aux_job_list)
                             pin_job(job,machine,aux_job_list)
-                            
-                if succ.succ == []:             
-                    for job in succ.pred:
-                        if job.machine is None:                     
+        
+                if machine.slots == 0: break
+                if succ.succ == []:         
+                    for job in succ.pred:                       
+                        if job.machine is None: 
+                            if job.pred not in aux_job_list:
+                                for i in job.pred:
+                                    if i.machine is None:
+                                        pin_job(i,machine,aux_job_list)                   
                             pin_job(job,machine,aux_job_list)
                         else:
                             if succ not in aux_job_list: break
-                            pin_job(succ,machine,aux_job_list)
+                            pin_job(succ,machine,aux_job_list) 
+
+
 
 
 
