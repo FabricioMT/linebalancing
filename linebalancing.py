@@ -43,11 +43,11 @@ def readArgs():
         n_machine = int(sys.argv[2])
         file_input = listdir('./inputs/')
 
-        if n_machine >= 3:
+        if n_machine >= 1:
             pass
         else:
             print("Número de Maquinas muito baixo !")
-            n_machine = 3
+            n_machine = 1
             print("Número de Maquinas set default = 6.")
         
         for file in file_input:
