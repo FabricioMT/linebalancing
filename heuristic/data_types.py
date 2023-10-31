@@ -1,4 +1,3 @@
-import random
 
 class Task:
 
@@ -90,58 +89,7 @@ class Data:
         self.machines = machines
         self.task = jobs
         self.precedences = precedences
-       
-def pin_job(job:Task,machine:Machine, job_list:list[Task]):
-    if machine.slots != 0:
-        machine.add_job(job)
-        job_list.remove(job)
-
-class DataRandomParams(Data):
-
-    def __init__(self, params: Data):
-        super().__init__(params.machines, params.task, params.precedences)
-        self.seed = None
-        task = params.task
-        machines = params.machines
-        precedences = params.precedences
-        self.seq = self._create_solution(machines,task,precedences)
-    
-    def restart(self):
-        self.__init__(self)
-
-    def _create_solution(self, machines: list[Machine], jobs :list[Task],precendence_list):
-        random.seed(self.seed)
-        aux_job_list = jobs.copy()
-        aux_machines = TaskListClass(machines.copy())
-
-        DivMod = divmod(len(jobs),len(machines))
-
-        div,resto = DivMod[0],DivMod[1]
-
-        for mch in aux_machines: 
-            mch.slots = div
-            if aux_machines.is_last(mch):
-                mch.slots = div+resto            
-        
-        print(aux_job_list)
-        for machine in aux_machines:
-
-            for task in precendence_list.values():             
-                pred,succ = task[0],task[1]
-
-                if succ.pred not in aux_job_list:
-                    for job in succ.pred:
-                        if job.machine is None:
-                            pin_job(job,machine,aux_job_list)
-                            
-                if succ.succ == []:             
-                    for job in succ.pred:
-                        if job.machine is None:                     
-                            pin_job(job,machine,aux_job_list)
-                        else:
-                            if succ not in aux_job_list: break
-                            pin_job(succ,machine,aux_job_list)
-
+   
 
 
                 

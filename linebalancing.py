@@ -3,6 +3,7 @@ from timeit import default_timer as timer
 from datetime import timedelta
 from os import listdir
 from heuristic.data_types import *
+from heuristic.local_find import *
 
 def assign_data(file_path,num_machines):
     with open(file_path, 'r') as file:
@@ -68,14 +69,13 @@ def readArgs():
 
 def printdata(Data: Data):
     #print('Maquinas:',Data.machines)
-    #for task in Data.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
+    for task in Data.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
     print('\n')
     #print('pair_cost:',Data.pair_cost.items())
     for machine in Data.machines: print(f'Maquina: [{machine.key}] Tarefas Atendidas: {machine.jobs}\nCusto total da Maquina: {machine.total_cost}')
     print('\n')
 
-def calculate_makespan(machines):
-    return max([machine.total_cost for machine in machines])
+
 
 if __name__ == '__main__':
 
@@ -85,13 +85,8 @@ if __name__ == '__main__':
 
     data = assign_data(inputs,n_machine)
 
-    ramd = DataRandomParams(data)
-
-    printdata(ramd)
-    
-    FO = calculate_makespan(ramd.machines)
-    print('FO de maior Custo:',FO)
-
+    busca_local(data)
+    printdata(data)
     end = timer()
     timing = timedelta(seconds=end-start)
   
