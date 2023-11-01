@@ -98,7 +98,9 @@ class Graph(Data):
         self.O = {}
         self._start()
         self.C = max([machine.total_cost for machine in self.machines])
-        self.precedences = TaskListClass(self.O.keys())
+        self.seq = [op for op in self.O]
+        print('self.seq',self.seq)
+        
         self.task = TaskListClass(Data.task)
             
 
@@ -110,7 +112,7 @@ class Graph(Data):
     def precede_job(self, machine, job):
         print('job',job)
         print('machine',machine)
-        last_machine = self.task[job.task_id].prev
+        last_machine = self.seq[job].prev
         print(last_machine)
         if last_machine is not None:
             return self.O[last_machine, job]

@@ -1,20 +1,28 @@
 from heuristic.operations import *
 from heuristic.data_types import *
-
-
+from heuristic.evaluation import *
+from collections import *
+def get_critical(graph: Graph):
+    """Assign critical attribute of operations from graph"""
+    for key, o in graph.O.items():
+        if o.tail + o.release == graph.C:
+            graph.O[key].critical = True
+        else:
+            graph.O[key].critical = False
+        
 def find_swaps(grafo:Graph):
     swaps = []
-    for key,machine in grafo.M.items():
-        last_critical = False
-        last_job = None
-        for job in machine.jobs:
-            if grafo.O[key,job]:
-                if last_critical:
-                    swaps.append((machine.key, last_job, job))
-                last_critical = True
-            else:
-                last_critical = False
-            last_job = job
+    for m in grafo.M:
+            last_critical = False
+            last_job = None
+            for j in grafo.M[m].jobs:
+                if grafo.O[m, j].critical:
+                    if last_critical:
+                        swaps.append((m, last_job, j))
+                    last_critical = True
+                else:
+                    last_critical = False
+                last_job = j
     return swaps
 
 
@@ -104,11 +112,12 @@ def busca_local(data:Data,max_steps=1000):
     aux_init_machines = initSol.machines.copy()
     aux_init_jobs = initSol.task.copy()
 
-    G = Graph(initSol)
+    S = Graph(initSol)
     print('len(G.O)')
-
-    swaps = find_swaps(G)
-    #print(swaps)
+    calc_tails(S)
+    get_critical(S)
+    swaps = find_swaps(S)
+    print('swaps',swaps)
     #find_best_move(G)
     #print(G.O)
 
