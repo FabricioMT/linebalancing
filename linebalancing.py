@@ -82,11 +82,12 @@ if __name__ == '__main__':
     start = timer()
     tempo_corrido = timedelta(seconds=start)
     inputs, n_machine = readArgs()
-
     data = assign_data(inputs,n_machine)
+    print("inicial")
+    S = busca_local(data)
+    print("busca local")
+    printdata(S)
 
-    busca_local(data)
-    printdata(data)
     end = timer()
     timing = timedelta(seconds=end-start)
   

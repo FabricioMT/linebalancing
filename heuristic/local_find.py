@@ -1,123 +1,159 @@
 from heuristic.operations import *
 from heuristic.data_types import *
-from heuristic.evaluation import *
-from collections import *
-def get_critical(graph: Graph):
-    """Assign critical attribute of operations from graph"""
-    for key, o in graph.O.items():
-        if o.tail + o.release == graph.C:
-            graph.O[key].critical = True
-        else:
-            graph.O[key].critical = False
-        
-def find_swaps(grafo:Graph):
-    swaps = []
-    for m in grafo.M:
-            last_critical = False
-            last_job = None
-            for j in grafo.M[m].jobs:
-                if grafo.O[m, j].critical:
-                    if last_critical:
-                        swaps.append((m, last_job, j))
-                    last_critical = True
-                else:
-                    last_critical = False
-                last_job = j
-    return swaps
+from heuristic.visinhos import *
+import random
+def find_lower_cost(graph: Graph, machine: Machine):
+    mincost = machine, min(j.cost for j in graph.M[machine].jobs)
+    return mincost
 
+def printdata(graph: Graph):
+    
+    #print('Maquinas:',Data.machines)
+    #for task in graph.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
+    print('\n')
+    #print('pair_cost:',Data.pair_cost.items())
+    for machine in graph.machines: print(f'Maquina: [{machine.key}] Tarefas Atendidas: {machine.jobs}\nCusto total da Maquina: {machine.total_cost}')
+    print('\n')
 
-def calc_cost(swap: tuple, graph: Graph):
+def predecessores_indiretos(task, precedencias):
+    predecessores = set()
 
-    # Label operations of swap
-    a = graph.O[swap[0], swap[1]]
-    b = graph.O[swap[0], swap[2]]
+    def buscar_predecessores(task_atual):
+        for pred, succ in precedencias:
+            if succ == task_atual:
+                predecessores.add(pred)
+                buscar_predecessores(pred)
+
+    buscar_predecessores(task)
+    return predecessores
+
+def troca_valida(graph, move, precedencias):
+    machine_from, task_from, machine_to, task_to = move
+
+    maquina1 = graph.M[machine_from]
+    maquina2 = graph.M[machine_to]
+
+    # Verifica se as tarefas estão em máquinas diferentes
+    if maquina1 == maquina2:
+        return False
+
+    tarefa1_predecessores = predecessores_indiretos(task_from, precedencias)
+    tarefa2_predecessores = predecessores_indiretos(task_to, precedencias)
+
+    # Verifica se a troca quebra as precedências
+    if task_to in tarefa1_predecessores or task_from in tarefa2_predecessores:
+        return False
     
-    # Find previous and following operations
-    PJa = graph.precede_job(*a.code)
-    PMa = graph.precede_machine(*a.code)
-    SJa = graph.follow_job(*a.code)
-    SMa = graph.follow_machine(*a.code)
+    return True
+
+def verificar_precedencias(machines):
+    for machine in machines:
+        for task in machine.jobs:
+            for precedencia in task.pred:
+                maquina_precedencia = next((m for m, other_machine in enumerate(machines) if precedencia in [t.task_id for t in other_machine.jobs]), None)
+                maquina_tarefa = machines.index(machine)
+                # Verifica se a precedência é respeitada
+                if maquina_precedencia is not None and maquina_precedencia > maquina_tarefa:
+                    return False
+
+    return True
+# def troca_valida(graph,move, precedencias):
+
+#     machine_from, task_from,machine_to, task_to = move
+
+#     maquina1 = graph.M[machine_from]
+#     maquina2 = graph.M[machine_to]
+#     # Verifica se as tarefas estão em máquinas diferentes
+#     if maquina1 == maquina2:
+#         return False
+
+#     print(precedencias)
+
+#     tarefa1_dependencia = [pred for pred, succ in precedencias if succ == task_from]
+#     tarefa2_dependencia = [pred for pred, succ in precedencias if succ == task_to]
+#     print('task_from',task_from)
+#     print('tarefa1_dependencia',tarefa1_dependencia)
+#     print('task_to',task_to)
+#     print('tarefa1_dependencia',tarefa2_dependencia)
+#     # Verifica se a troca quebra a precedência da tarefa1 (tarefa1 deve ser feita após tarefa2_dependencia)
+#     if tarefa1_dependencia and tarefa1_dependencia[0] == task_to:
+#         return False
+
+#     # Verifica se a troca quebra a precedência da tarefa2 (tarefa2 deve ser feita após tarefa1_dependencia)
+#     if tarefa2_dependencia and tarefa2_dependencia[0] == task_from:
+#         return False
     
-    PJb = graph.precede_job(*b.code)
-    PMb = graph.precede_machine(*b.code)
-    SJb = graph.follow_job(*b.code)
-    SMb = graph.follow_machine(*b.code)
-    
-    # Calc equation terms for preceding
-    if PMa is None:
-        PMa_term = 0.0
-    else:
-        PMa_term = PMa.release + PMa.duration
-    if PJb is None:
-        PJb_term = 0.0
-    else:
-        PJb_term = PJb.release + PJb.duration
-    if PJa is None:
-        PJa_term = 0.0
-    else:
-        PJa_term = PJa.release + PJa.duration
-    
-    # Calc equation terms for next
-    if SMa is None:
-        q_SMa = 0.0
-    else:
-        q_SMa = SMa.tail
-    if SMb is None:
-        q_SMb = 0.0
-    else:
-        q_SMb = SMb.tail
-    if SJa is None:
-        q_SJa = 0.0
-    else:
-        q_SJa = SJa.tail
-    if SJb is None:
-        q_SJb = 0.0
-    else:
-        q_SJb = SJb.tail
-    
-    # New releases
-    rb_new = max(PMa_term, PJb_term)
-    ra_new = max(rb_new + b.duration, PJa_term)
-    
-    # New tails
-    qa_new = max(q_SMb, q_SJa) + a.duration
-    qb_new = max(qa_new, q_SJb) + b.duration
-    
-    # New makespan
-    C_new = max(rb_new + qb_new, ra_new + qa_new)
-    
-    return C_new
+#     return True
+
 
 def find_best_move(graph: Graph):
+    Copy = graph
+    Copy.neighborhood = Neighborhood(Copy)
+    swaps = Copy.neighborhood.get_neighbors()
 
-    # Save current solution
-    C_best = graph.C
-    best_move = None
-    swaps = find_swaps(graph)
-    
-    # Iterate over swaps
-    if swaps is not None:
-        for swap in swaps:
-            C_swap = calc_cost(swap, graph)
-            if C_swap < C_best:
-                best_move = swap
-                C_best = C_swap
+    C_best = Copy.C
+    best_move = []
+
+    for move in swaps:
+        if troca_valida(Copy,move,Copy.seq) and verificar_precedencias(Copy.machines):
+            if move is not None:
+                new_graph = apply_move(Copy,move)
+                C_swap = calculate_makespan(new_graph.machines)
+                if C_swap < C_best:
+                    best_move = move
+                    C_best = C_swap
     
     return best_move
 
-def busca_local(data:Data,max_steps=1000):
-    initSol = Create_init_solution(data)
-    FO = calculate_makespan(initSol.machines)
-    
-    aux_init_machines = initSol.machines.copy()
-    aux_init_jobs = initSol.task.copy()
+def apply_move(graph, move):
+    # Apply a random move in the neighborhood with restrictions respecting task precedences
+    #print('aply move',move)
+    machine_from, task_from,machine_to, task_to = move
 
+    machine1 = graph.M[machine_from]
+    machine2 = graph.M[machine_to]
+
+    machine1.swap_jobs(task_from,task_to,machine2)
+    machine2.swap_jobs(task_to,task_from,machine1)
+    return graph
+
+
+def _local_search_step(graph, copy=False):
+    
+    # Define new graph
+    if copy:
+        new_graph = graph.copy()
+    else:
+        new_graph = graph 
+    # Obtain best move
+    find_best_move(new_graph)
+
+    return new_graph
+
+def calculate_makespan(machines:list[Machine]):
+    return max([machine.total_cost for machine in machines])
+
+def busca_local(data:Data, max_steps=1000, copy=False):
+
+    initSol = Create_init_solution(data)
     S = Graph(initSol)
-    print('len(G.O)')
-    calc_tails(S)
-    get_critical(S)
-    swaps = find_swaps(S)
-    print('swaps',swaps)
-    #find_best_move(G)
-    #print(G.O)
+    printdata(S)
+    S.C = calculate_makespan(S.machines)
+    makepan_inicial = S.C
+    
+    proceed = True
+    k = 0
+    
+    while proceed and k < max_steps:
+        
+        S = _local_search_step(S, copy=copy)
+        C_new = S.C
+        if C_new > makepan_inicial:
+            S.C = C_new
+        else:
+            proceed = False
+        k = k + 1
+    
+    return S
+
 

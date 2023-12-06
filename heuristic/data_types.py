@@ -1,5 +1,4 @@
 class Task:
-
     def __init__(self, task_id):
         self.task_id = int(task_id)
         self.pred = []
@@ -49,6 +48,7 @@ class TaskListClass(list):
         j = self.index(y)
         self[i] = y
         self[j] = x
+
     
     def append(self, __object) -> None:
         if __object not in self:
@@ -60,7 +60,7 @@ class TaskListClass(list):
         return super().__len__()
 
 class Machine:
-    
+
     def __init__(self, key,jobs=None) -> None:
         if jobs is None: jobs = TaskListClass()
         self.key = key
@@ -75,38 +75,30 @@ class Machine:
         if job.machine is None:
             if self.slots != 0:
                 self.jobs.append(job)
-                job.assign_machine(self.key)
                 self.total_cost = self.total_cost + job.cost
                 self.slots = self.slots - 1
-                print(f'Job: {job.task_id} assign in Machine: {self.key}')
+                #print(f'Job: {job.task_id} assign in Machine: {self.key}')
     
-    def __len__(self) -> int:
-        return super().__len__()
+    def swap_jobs(self, task_a, task_b, target_machine):
+            
+            if task_a in self.jobs and task_b in target_machine.jobs:
+                # Remover tarefas originais
+                self.jobs.remove(task_a)
+                target_machine.jobs.remove(task_b)
+                
+                # Adicionar tarefas trocadas
+                self.jobs.append(task_b)
+                target_machine.jobs.append(task_a)
 
+                # Atualizar custos e slots
+                self.total_cost = sum(job.cost for job in self.jobs)
+                target_machine.total_cost = sum(job.cost for job in target_machine.jobs)
+    
 class Data:
     def __init__(self, machines: list[Machine], jobs: list[Task], precedences: dict):
         self.machines = machines
         self.task = jobs
         self.precedences = precedences
-   
-
-
-                
-
-
-
-
-                    
-                    
-
-
-                    
-
-
-                
     
-                    
-                
-                
-    
+
 
