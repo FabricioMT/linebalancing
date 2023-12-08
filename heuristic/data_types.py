@@ -59,6 +59,7 @@ class TaskListClass(list):
     def __len__(self) -> int:
         return super().__len__()
 
+
 class Machine:
 
     def __init__(self, key,jobs=None) -> None:
@@ -83,11 +84,15 @@ class Machine:
             
             if task_a in self.jobs and task_b in target_machine.jobs:
                 # Remover tarefas originais
+                #print(task_a,task_b)
+                
                 self.jobs.remove(task_a)
+                #print(target_machine.jobs)
                 target_machine.jobs.remove(task_b)
                 
                 # Adicionar tarefas trocadas
                 self.jobs.append(task_b)
+
                 target_machine.jobs.append(task_a)
 
                 # Atualizar custos e slots

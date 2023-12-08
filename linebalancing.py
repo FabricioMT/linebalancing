@@ -13,7 +13,7 @@ def assign_data(file_path,num_machines):
     num_tasks = int(input_data[0])
     precedences_sequence = {}
     task_list = [Task(i+1) for i in range(num_tasks)]
-    
+    machines = [Machine(i+1) for i in range(num_machines)]
 
     precedences = [tuple(map(Task, pair.split(','))) for pair in input_data[num_tasks+1:-1]]
     processing_times = list(map(int, input_data[1:num_tasks+1]))
@@ -34,7 +34,7 @@ def assign_data(file_path,num_machines):
         tasks[1].cost = processing_times[tasks[1].task_id-1]
         pair_cost[i] = (tasks[0].cost + tasks[1].cost)
 
-    machines = [Machine(i+1) for i in range(num_machines)]
+    
 
     return Data(machines,task_list,precedences_sequence)    
 
@@ -69,7 +69,7 @@ def readArgs():
 
 def printdata(Data: Data):
     #print('Maquinas:',Data.machines)
-    #for task in Data.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
+    for task in Data.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
     print('\n')
     #print('pair_cost:',Data.pair_cost.items())
     for machine in Data.machines: print(f'Maquina: [{machine.key}] Tarefas Atendidas: {machine.jobs}\nCusto total da Maquina: {machine.total_cost}')

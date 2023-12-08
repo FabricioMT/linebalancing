@@ -62,7 +62,8 @@ class Create_init_solution(Data):
                             pin_job(job,machine,aux_job_list)
                         else:
                             if succ not in aux_job_list: break
-                            pin_job(succ,machine,aux_job_list)                      
+                            pin_job(succ,machine,aux_job_list)  
+
 
 class Operation:
 
@@ -166,7 +167,3 @@ class Neighborhood:
         
         return self.moves
 
-    def filter_moves_bad(self):
-        print(self.moves)
-
-    # Se não quebrar nenhuma precedência, a troca é válida

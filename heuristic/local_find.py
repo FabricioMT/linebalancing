@@ -1,10 +1,7 @@
 from heuristic.operations import *
 from heuristic.data_types import *
-from heuristic.visinhos import *
 import random
-def find_lower_cost(graph: Graph, machine: Machine):
-    mincost = machine, min(j.cost for j in graph.M[machine].jobs)
-    return mincost
+
 
 def printdata(graph: Graph):
     
@@ -17,6 +14,7 @@ def printdata(graph: Graph):
 
 def predecessores_indiretos(task, precedencias):
     predecessores = set()
+    
 
     def buscar_predecessores(task_atual):
         for pred, succ in precedencias:
@@ -47,6 +45,7 @@ def troca_valida(graph, move, precedencias):
     return True
 
 def verificar_precedencias(machines):
+
     for machine in machines:
         for task in machine.jobs:
             for precedencia in task.pred:
@@ -57,66 +56,78 @@ def verificar_precedencias(machines):
                     return False
 
     return True
-# def troca_valida(graph,move, precedencias):
-
-#     machine_from, task_from,machine_to, task_to = move
-
-#     maquina1 = graph.M[machine_from]
-#     maquina2 = graph.M[machine_to]
-#     # Verifica se as tarefas estão em máquinas diferentes
-#     if maquina1 == maquina2:
-#         return False
-
-#     print(precedencias)
-
-#     tarefa1_dependencia = [pred for pred, succ in precedencias if succ == task_from]
-#     tarefa2_dependencia = [pred for pred, succ in precedencias if succ == task_to]
-#     print('task_from',task_from)
-#     print('tarefa1_dependencia',tarefa1_dependencia)
-#     print('task_to',task_to)
-#     print('tarefa1_dependencia',tarefa2_dependencia)
-#     # Verifica se a troca quebra a precedência da tarefa1 (tarefa1 deve ser feita após tarefa2_dependencia)
-#     if tarefa1_dependencia and tarefa1_dependencia[0] == task_to:
-#         return False
-
-#     # Verifica se a troca quebra a precedência da tarefa2 (tarefa2 deve ser feita após tarefa1_dependencia)
-#     if tarefa2_dependencia and tarefa2_dependencia[0] == task_from:
-#         return False
-    
-#     return True
-
 
 def find_best_move(graph: Graph):
-    Copy = graph
-    Copy.neighborhood = Neighborhood(Copy)
-    swaps = Copy.neighborhood.get_neighbors()
-
-    C_best = Copy.C
-    best_move = []
-
-    for move in swaps:
-        if troca_valida(Copy,move,Copy.seq) and verificar_precedencias(Copy.machines):
-            if move is not None:
-                new_graph = apply_move(Copy,move)
-                C_swap = calculate_makespan(new_graph.machines)
-                if C_swap < C_best:
-                    best_move = move
-                    C_best = C_swap
+    graph.neighborhood = Neighborhood(graph)
+    swaps = graph.neighborhood.get_neighbors()
     
-    return best_move
+    best_moves = []
+    #printdata()
+    for move in swaps:
+        if troca_valida(graph,move,graph.seq):
+            best_moves.append(move)
 
-def apply_move(graph, move):
-    # Apply a random move in the neighborhood with restrictions respecting task precedences
-    #print('aply move',move)
+    return best_moves
+
+def sucessores_indiretos(task, precedencias):
+    sucessores = set()
+
+    def buscar_sucessores(task_atual):
+        for pred, succ in precedencias:
+            if pred == task_atual:
+                sucessores.add(succ)
+                buscar_sucessores(succ)
+
+    buscar_sucessores(task)
+    return sucessores
+
+def reorganizar_tarefas_e_sucessores(graph, machine_key, task_with_successor):
+    # Encontrar a máquina
+    machine = graph.M[machine_key]
+    # Verificar se a máquina foi encontrada
+    if machine:
+        # Encontrar a tarefa com o sucessor
+        task = task_with_successor
+        # Verificar se a tarefa foi encontrada
+        if task:
+            # Encontrar os sucessores indiretos da tarefa
+            #predecessores = predecessores_indiretos(task,graph.seq)
+            sucessores = sucessores_indiretos(task, graph.seq)
+           
+            # Remover a tarefa e seus sucessores da posição atual
+            tasks_to_remove = [t for t in machine.jobs if t in sucessores]
+            #print('tasks_to_remove',tasks_to_remove)
+            for t in tasks_to_remove:
+                machine.jobs.remove(t)
+
+            # Adicionar a tarefa e seus sucessores ao final da lista
+            machine.jobs.extend(tasks_to_remove)
+
+def apply_move(graph: Graph, move) -> Graph:
+
     machine_from, task_from,machine_to, task_to = move
 
     machine1 = graph.M[machine_from]
     machine2 = graph.M[machine_to]
 
+    p = predecessores_indiretos(task_from,graph.seq)
+    s = sucessores_indiretos(task_from,graph.seq)
+    # print(task_from)
+    # print(p)
+    # print(s)
+    p2 = predecessores_indiretos(task_to,graph.seq)
+    s2 = sucessores_indiretos(task_from,graph.seq)
+    # print(task_to)
+    # print(p2)
+    # print(s2)
     machine1.swap_jobs(task_from,task_to,machine2)
     machine2.swap_jobs(task_to,task_from,machine1)
-    return graph
+    reorganizar_tarefas_e_sucessores(graph,machine_to,task_from)
+    reorganizar_tarefas_e_sucessores(graph,machine_from,task_to)
 
+    
+
+    return graph
 
 def _local_search_step(graph, copy=False):
     
@@ -126,7 +137,17 @@ def _local_search_step(graph, copy=False):
     else:
         new_graph = graph 
     # Obtain best move
-    find_best_move(new_graph)
+
+    best_moves = find_best_move(new_graph)
+    C_best = graph.C
+    move = random.choice(best_moves)
+    print('move',move)
+    if move is not None:
+        new_graph = apply_move(new_graph,move)
+
+        #C_swap = calculate_makespan(new_graph.machines)
+
+    #new_graph = apply_move(new_graph,best_move)
 
     return new_graph
 
