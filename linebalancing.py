@@ -4,6 +4,7 @@ from datetime import timedelta
 from os import listdir
 from heuristic.data_types import *
 from heuristic.local_find import *
+from heuristic.grasp import *
 
 def assign_data(file_path,num_machines):
     with open(file_path, 'r') as file:
@@ -66,13 +67,16 @@ def readArgs():
         exit(1)
     return arq, n_machine
 
+def calculate_makespan(machines:list[Machine]):
+    return max([machine.total_cost for machine in machines])
 
 def printdata(Data: Data):
     #print('Maquinas:',Data.machines)
     for task in Data.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
     print('\n')
-    #print('pair_cost:',Data.pair_cost.items())
     for machine in Data.machines: print(f'Maquina: [{machine.key}] Tarefas Atendidas: {machine.jobs}\nCusto total da Maquina: {machine.total_cost}')
+    print('\n')
+    print('FO:',calculate_makespan(Data.machines))
     print('\n')
 
 
@@ -82,12 +86,17 @@ if __name__ == '__main__':
     start = timer()
     tempo_corrido = timedelta(seconds=start)
     inputs, n_machine = readArgs()
-    data = assign_data(inputs,n_machine)
-    print("inicial")
-    S = busca_local(data)
-    print("busca local")
-    printdata(S)
 
+    data = assign_data(inputs,n_machine)
+    initSol = Create_init_solution(data)
+
+    printdata(initSol)
+    
+    grasp = GRASP(initSol)
+    
+    #GRAP MAX TIME: EM MINUTOS
+    grasp.execute(1)
+    printdata(grasp.data)
     end = timer()
     timing = timedelta(seconds=end-start)
   

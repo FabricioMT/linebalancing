@@ -102,8 +102,10 @@ class Machine:
 class Data:
     def __init__(self, machines: list[Machine], jobs: list[Task], precedences: dict):
         self.machines = machines
-        self.task = jobs
+        self.M = {machine.key: machine for machine in self.machines}
         self.precedences = precedences
+        self.task = jobs
+        
     
 
 

@@ -71,13 +71,17 @@ class Operation:
         self,
         machine: Machine,
         job: Task,
-        release=None,
+        machine2: Machine,
+        job2: Task,
     ) -> None:
         self.machine = machine
         self.job = job
         self.code = machine, job
+        self.machine = machine2
+        self.job = job2
+        self.code = machine2, job2
         self.duration = job.cost
-        self.release = release
+        self.duration2 = job2.cost
         self.tail = None
         self.critical = False
     
@@ -138,7 +142,7 @@ class Graph(Data):
             return None
         
     def copy(self):
-        return copy.deepcopy(self)
+        return copy.copy(self)
     
 class Neighborhood:
 
@@ -157,7 +161,6 @@ class Neighborhood:
                 for machine_to in self.graph.M.keys():
                     if machine_from != machine_to:  # Certificar-se de que as máquinas são diferentes
                         for task_to in self.graph.M[machine_to].jobs:
-                            
                             move = machine_from, task_from,machine_to, task_to
                             self.moves.append(move)
 
