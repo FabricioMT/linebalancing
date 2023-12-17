@@ -59,7 +59,6 @@ class TaskListClass(list):
     def __len__(self) -> int:
         return super().__len__()
 
-
 class Machine:
 
     def __init__(self, key,jobs=None) -> None:
@@ -82,14 +81,13 @@ class Machine:
     
     def swap_jobs(self, task_a, task_b, target_machine):
             
+            #print('target_machine',target_machine)
             if task_a in self.jobs and task_b in target_machine.jobs:
                 # Remover tarefas originais
-                #print(task_a,task_b)
                 
                 self.jobs.remove(task_a)
                 #print(target_machine.jobs)
                 target_machine.jobs.remove(task_b)
-                
                 # Adicionar tarefas trocadas
                 self.jobs.append(task_b)
 
@@ -102,10 +100,6 @@ class Machine:
 class Data:
     def __init__(self, machines: list[Machine], jobs: list[Task], precedences: dict):
         self.machines = machines
-        self.M = {machine.key: machine for machine in self.machines}
         self.precedences = precedences
         self.task = jobs
-        
-    
-
 

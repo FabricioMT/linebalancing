@@ -88,14 +88,13 @@ if __name__ == '__main__':
     inputs, n_machine = readArgs()
 
     data = assign_data(inputs,n_machine)
-    initSol = Create_init_solution(data)
+    #initSol = Create_init_solution(data)
 
-    printdata(initSol)
+    printdata(data)
     
-    grasp = GRASP(initSol)
+    grasp = GRASP(data)
+    grasp.execute(0.1)
     
-    #GRAP MAX TIME: EM MINUTOS
-    grasp.execute(1)
     printdata(grasp.data)
     end = timer()
     timing = timedelta(seconds=end-start)

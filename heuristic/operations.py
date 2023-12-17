@@ -1,12 +1,14 @@
 from heuristic.data_types import *
 import copy
 import numpy as np
-
+import random
 def pin_job(job:Task,machine:Machine, job_list:list[Task]):
     if machine.slots != 0:
         machine.add_job(job)
         job.assign_machine(machine)
-        job_list.remove(job)
+        if job in job_list:
+            job_list.remove(job)
+        #job_list.remove(job)
     else:
         return print(f'Machine {machine.key} Slots {machine.slots} !')
 
@@ -64,6 +66,30 @@ class Create_init_solution(Data):
                             if succ not in aux_job_list: break
                             pin_job(succ,machine,aux_job_list)  
 
+def predecessores_indiretos(task, precedencias):
+    predecessores = set()
+    
+
+    def buscar_predecessores(task_atual):
+        for pred, succ in precedencias:
+            if succ == task_atual:
+                predecessores.add(pred)
+                buscar_predecessores(pred)
+
+    buscar_predecessores(task)
+    return predecessores
+
+def sucessores_indiretos(task, precedencias):
+    sucessores = set()
+
+    def buscar_sucessores(task_atual):
+        for pred, succ in precedencias:
+            if pred == task_atual:
+                sucessores.add(succ)
+                buscar_sucessores(succ)
+
+    buscar_sucessores(task)
+    return sucessores
 
 class Operation:
 
@@ -71,33 +97,59 @@ class Operation:
         self,
         machine: Machine,
         job: Task,
-        machine2: Machine,
-        job2: Task,
+        precedence_seq: []
     ) -> None:
         self.machine = machine
         self.job = job
-        self.code = machine, job
-        self.machine = machine2
-        self.job = job2
-        self.code = machine2, job2
+        self.code = machine.key, job
         self.duration = job.cost
-        self.duration2 = job2.cost
-        self.tail = None
+        self.precedence_seq = precedence_seq
+        self.predecessores_indiretos = predecessores_indiretos(self.job,precedence_seq)
+        self.sucessores_indiretos = sucessores_indiretos(self.job,precedence_seq)
         self.critical = False
     
     def __repr__(self) -> str:
-        return str(self.__dict__)
+        return str(self.code)
 
 class Graph(Data):
 
     def __init__(self, Data:Data):
         super().__init__(Data.machines, Data.task, Data.precedences)
         self.M = {machine.key: machine for machine in self.machines}
+        #print(Data.precedences)
         self.seq = [i for i in self.precedences.values()]
-        self.O = {}  
+        self.O = {}
         self.C = None
-        self.neighborhood = []
+        self.moves = []
+        self._start()
+        #self.reset()
+        self.sequence = [j for _,j in self.O]
+        self._generate_swap_moves()
 
+    def _start(self):
+        for key, machine in self.M.items():     
+            for job in machine.jobs:
+                self.O[key,job] = Operation(machine, job,self.seq)
+    
+    def reset(self):
+        task_list = [Task(i+1) for i in range(self.task)]
+        machines = [Machine(i+1) for i in range(self.machines)]
+        print(machines)
+        precedences_sequence = self.sequence
+        return Data(machines,task_list,precedences_sequence)
+
+                
+ 
+    def _generate_swap_moves(self):
+        # Gerar todos os movimentos de troca possíveis entre máquinas diferentes
+        for machine_from in self.M.keys():
+            for task_from in self.M[machine_from].jobs:
+                for machine_to in self.M.keys():
+                    if machine_from != machine_to:  # Certificar-se de que as máquinas são diferentes
+                        for task_to in self.M[machine_to].jobs:
+                            move = (self.O[machine_from,task_from],self.O[machine_to,task_to])
+                            self.moves.append(move)
+        
     def precede_job(self, machine, job):
         last_job = self.M[machine].jobs.prev(job)
         if last_job is not None:
@@ -140,33 +192,13 @@ class Graph(Data):
             return self.O[follow_machine, next_job]
         else:
             return None
-        
-    def copy(self):
-        return copy.copy(self)
     
-class Neighborhood:
-
-    def __init__(self, graph: Graph):
-        self.graph = graph
-        self.moves = []
-
-    def reset_moves(self):
-        # Resetar a lista de movimentos
-        self.moves = []
- 
-    def generate_swap_moves(self):
-        # Gerar todos os movimentos de troca possíveis entre máquinas diferentes
-        for machine_from in self.graph.M.keys():
-            for task_from in self.graph.M[machine_from].jobs:
-                for machine_to in self.graph.M.keys():
-                    if machine_from != machine_to:  # Certificar-se de que as máquinas são diferentes
-                        for task_to in self.graph.M[machine_to].jobs:
-                            move = machine_from, task_from,machine_to, task_to
-                            self.moves.append(move)
-
-    def get_neighbors(self):
-        # Retornar a lista de vizinhos (movimentos) gerados
-        self.generate_swap_moves()
-        
-        return self.moves
+    def get_operation_by_job(self, job):
+        for machine in self.M.values():
+            for operation in machine.jobs:
+                if operation == job:
+                    return self.O[machine.key,operation]
+    def copy(self):
+        return copy.deepcopy(self)
+    
 
