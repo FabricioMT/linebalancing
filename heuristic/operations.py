@@ -119,7 +119,7 @@ class Graph(Data):
         #print(Data.precedences)
         self.seq = [i for i in self.precedences.values()]
         self.O = {}
-        self.C = None
+        self.C = max([machine.total_cost for machine in self.machines])
         self.moves = []
         self._start()
         #self.reset()

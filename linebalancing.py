@@ -5,6 +5,8 @@ from os import listdir
 from heuristic.data_types import *
 from heuristic.local_find import *
 from heuristic.grasp import *
+import csv
+
 
 def assign_data(file_path,num_machines):
     with open(file_path, 'r') as file:
@@ -70,16 +72,38 @@ def readArgs():
 def calculate_makespan(machines:list[Machine]):
     return max([machine.total_cost for machine in machines])
 
-def printdata(Data: Data):
-    #print('Maquinas:',Data.machines)
-    for task in Data.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
-    print('\n')
-    for machine in Data.machines: print(f'Maquina: [{machine.key}] Tarefas Atendidas: {machine.jobs}\nCusto total da Maquina: {machine.total_cost}')
-    print('\n')
-    print('FO:',calculate_makespan(Data.machines))
-    print('\n')
+# def printdata(Data: Data,results):
+#     print('\n')
+#     for machine in Data.machines: print(f'Maquina: [{machine.key}] Tarefas Atendidas: {machine.jobs}\nCusto total da Maquina: {machine.total_cost}')
+#     print('\n')
+#     print('Tabela\n',results,end='\n')
+#     print('\n')
 
+# def printdata(Data: Data,results):
+#     with open('relatorio.csv', 'w', newline='') as csvfile:
+#         writer = csv.writer(csvfile, delimiter=';')
+#         writer.writerow(['Melhor FO', 'FO Media', 'Desvio (%)', 'Tempo Melhor (seg.)', 'Tempo Medio (seg.)'])
 
+#         for item in results:
+#             writer.writerow([item['Melhor FO'], item['FO Media'], item['Desvio (%)'], item['Tempo Melhor (seg.)'], item['Tempo Medio (seg.)']])
+
+#     for machine in Data.machines: print(f'Maquina: [{machine.key}] Tarefas Atendidas: {machine.jobs}\nCusto total da Maquina: {machine.total_cost}')
+#     print('\n')
+#     print('Tabela\n',results,end='\n')
+#     print('\n')
+
+def write_reports(results_3, results_5, results_11):
+    # Crie um objeto de arquivo CSV
+    with open('relatorio.csv', 'w', newline='') as csvfile:
+        # Crie um escritor CSV
+        writer = csv.writer(csvfile, delimiter=';')
+
+        # Escreva os cabeçalhos do relatório
+        writer.writerow(['Numero de Maquinas', 'Melhor FO', 'FO Media', 'Desvio (%)', 'Tempo Melhor (seg.)', 'Tempo Medio (seg.)'])
+        i = [3,5,11]
+        # Itere sobre os resultados de cada relatório e escreva-os no arquivo CSV
+        for results in [results_3, results_5, results_11]:
+            writer.writerow([i.pop(0), results[0]['Melhor FO'], results[0]['FO Media'], results[0]['Desvio (%)'], results[0]['Tempo Melhor (seg.)'], results[0]['Tempo Medio (seg.)']])
 
 if __name__ == '__main__':
 
@@ -87,15 +111,21 @@ if __name__ == '__main__':
     tempo_corrido = timedelta(seconds=start)
     inputs, n_machine = readArgs()
 
-    data = assign_data(inputs,n_machine)
-    #initSol = Create_init_solution(data)
+    data3 = assign_data(inputs,3)
+    grasp3 = GRASP(data3)
+    results3 = grasp3.execute(0.1)
+    #printdata(grasp3.data,results3)
 
-    printdata(data)
-    
-    grasp = GRASP(data)
-    grasp.execute(0.1)
-    
-    printdata(grasp.data)
+    data5 = assign_data(inputs,5)
+    grasp5 = GRASP(data5)
+    results5 = grasp5.execute(0.1)
+    #printdata(grasp5.data,results5)
+
+    data11 = assign_data(inputs,11)
+    grasp11 = GRASP(data11)
+    results11 = grasp11.execute(0.1)
+    #printdata(grasp11.data,results11)
+    write_reports(results3, results5, results11)
     end = timer()
     timing = timedelta(seconds=end-start)
   

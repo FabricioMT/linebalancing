@@ -10,12 +10,15 @@ class GRASP:
         self.data = data
         self.best_solution = None
         self.best_cost = float('inf')
+        self.results  = []
+
 
     def execute(self, max_minutes):
         start_time = time.time()
         elapsed_time = 0
 
         while elapsed_time < max_minutes * 60:
+        
             solution = self.construct_solution()
             
             self.local_search(solution)
@@ -24,14 +27,31 @@ class GRASP:
             if cost < self.best_cost:
                 self.best_solution = solution
                 self.best_cost = cost
+            self.results.append(solution)
+
             elapsed_time = time.time() - start_time
+
+            # Calcule a FO média e desvio
+                
+        fo_media = sum(solution.C for solution in self.results) / len(self.results)
+        desvio = (fo_media - self.best_cost) / self.best_cost * 100
+        # Atualize o relatório
+        relatorio = []
+        relatorio.append({
+                          'Melhor FO':self.best_cost,
+                               'FO Media':round(fo_media,3),
+                               'Desvio (%)':round(desvio,3),
+                               'Tempo Melhor (seg.)':round(elapsed_time,3),
+                               'Tempo Medio (seg.)':round(elapsed_time / len(self.results),3)})
+        return relatorio
+    
 
     def construct_solution(self):
         sol = Greedy_Randomized_Construction(self.data,alpha=5,seed=2)
         return sol
 
     def local_search(self, solution):
-        Solui = busca_local(solution, max_steps=1, copy=False)
+        Solui = busca_local(solution, max_steps=1)
         return Solui
 
     def calculate_makespan(self,solution):
@@ -63,7 +83,7 @@ def cria_LRC(alpha,increment_cost_list):
 
 def Greedy_Randomized_Construction(data:Data,alpha, seed):
     new_solution = data
-    random.seed = seed
+    random.seed(seed)
     new_graph_clear = Graph(new_solution)
     aux_machines = TaskListClass(new_graph_clear.machines.copy())
     DivMod = divmod(len(new_graph_clear.task),len(new_graph_clear.machines))

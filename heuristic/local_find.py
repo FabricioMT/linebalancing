@@ -12,23 +12,6 @@ def printdata(graph: Graph):
     for machine in graph.machines: print(f'Maquina: [{machine.key}] Tarefas Atendidas: {machine.jobs}\nCusto total da Maquina: {machine.total_cost}')
     print('\n')
 
-def predecessores_alocados_corretamente(task: Task, machine: Machine) -> bool:
-    """
-    Verifica se todos os predecessores da tarefa estão alocados em uma máquina
-    com uma chave maior ou igual à máquina atual.
-    """
-    if not task.pred:
-        # A tarefa não possui predecessores, então a condição é satisfeita.
-        return True
-    
-    for predecessor in task.pred:
-        if predecessor.machine is None or predecessor.machine.key < machine.key:
-            # Predecessor não alocado ou alocado em uma máquina com chave menor.
-            return False
-
-    # Todos os predecessores estão alocados corretamente.
-    return True
-
 def troca_valida(graph: Graph, move:list[Operation,Operation],sequence):
     operation1, operation2 = move
     maquina1 = operation1.machine
@@ -68,24 +51,6 @@ def troca_valida(graph: Graph, move:list[Operation,Operation],sequence):
  
     # if tarefa2_predecessores.difference(maquina1.jobs):
     #     return False
-
-    return True
-
-def verificar_precedencias(machines):
-    #print(machines)
-    for machine in machines:
-        #print(machine) 
-        for task in machine.jobs:
-            #print(machine.jobs) 
-            for precedencia in task.pred:
-                #print(precedencia)
-                maquina_precedencia = next((m for m, other_machine in enumerate(machines) 
-                            if precedencia in [t.task_id for t in other_machine.jobs]), None)
-                print(maquina_precedencia)
-                maquina_tarefa = machines.index(machine)
-                # Verifica se a precedência é respeitada
-                if maquina_precedencia is not None and maquina_precedencia > maquina_tarefa:
-                    return False
 
     return True
 
@@ -179,11 +144,10 @@ def find_best_move(graph: Graph):
     
     return best_move
 
-def _local_search_step(graph, copy=False):
+def _local_search_step(graph):
     
     new_graph = graph 
     # Obtain best move
-
     #printdata(new_graph)
     best_move = find_best_move(new_graph)
     #print('best_move',best_move)
@@ -196,14 +160,14 @@ def _local_search_step(graph, copy=False):
 def calculate_makespan(machines:list[Machine]):
     return max([machine.total_cost for machine in machines])
 
-def busca_local(data:Graph, max_steps:int, copy=False):
+def busca_local(data:Graph, max_steps:int):
     initSol = Graph(data)
     initSol.C = calculate_makespan(initSol.machines)
     makepan_inicial = initSol.C
     proceed = True
     k = 0
     while proceed and k < max_steps:
-        S = _local_search_step(initSol, copy=copy)
+        S = _local_search_step(initSol)
         C_new = S.C
         if C_new < makepan_inicial:
             makepan_inicial = C_new
