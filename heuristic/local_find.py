@@ -3,14 +3,7 @@ from heuristic.data_types import *
 import random
 
 
-def printdata(graph: Graph):
-    
-    #print('Maquinas:',Data.machines)
-    #for task in graph.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
-    print('\n')
-    #print('pair_cost:',Data.pair_cost.items())
-    for machine in graph.machines: print(f'Maquina: [{machine.key}] Tarefas Atendidas: {machine.jobs}\nCusto total da Maquina: {machine.total_cost}')
-    print('\n')
+
 
 def troca_valida(graph: Graph, move:list[Operation,Operation],sequence):
     operation1, operation2 = move

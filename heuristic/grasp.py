@@ -51,24 +51,26 @@ class GRASP:
         return sol
 
     def local_search(self, solution):
-        Solui = busca_local(solution, max_steps=1)
-        return Solui
+        local = busca_local(solution, max_steps=1)
+        return local
 
     def calculate_makespan(self,solution):
         return max([machine.total_cost for machine in solution.machines])
     
 def increment_list(new_graph_clear):
-    #print(new_graph_clear.task)
     increment_cost_list = []
+
     for task in new_graph_clear.task:
         increment_cost = task.cost
         task_preds = predecessores_indiretos(task,new_graph_clear.seq)
         for t in task_preds:
             increment_cost += t.cost
         increment_cost_list.append({'task': task, 'increment_cost': increment_cost})
+    
     return increment_cost_list
 
 def cria_LRC(alpha,increment_cost_list):
+
     gmin = 0
     gmax = 100
     lrc_candidates = []
@@ -79,6 +81,7 @@ def cria_LRC(alpha,increment_cost_list):
             if gmin <= increment_cost <= gmin + alpha * (gmax - gmin):
                 lrc_candidates.append(task)
                 increment_cost_list.remove(entry)
+
     return lrc_candidates
 
 def Greedy_Randomized_Construction(data:Data,alpha, seed):
@@ -101,11 +104,14 @@ def Greedy_Randomized_Construction(data:Data,alpha, seed):
     while new_graph_clear.task:
         for machine in new_graph_clear.machines:
             while lrc_candidates:
+
                 lrc_task = random.choice(lrc_candidates)
                 pin_job(lrc_task,machine,lrc_candidates)
                 new_graph_clear.task.remove(lrc_task)
+
                 increment_cost_list = increment_list(new_graph_clear)
                 lrc_candidates = cria_LRC(alpha,increment_cost_list)
+
                 if machine.slots == 0: break
             
     return new_graph_clear
