@@ -32,7 +32,8 @@ class GRASP:
             elapsed_time = time.time() - start_time
 
             # Calcule a FO média e desvio
-                
+        print(f"\n Tempo de Execução GRASP: {round(elapsed_time,3)} Seconds")  
+
         fo_media = sum(solution.C for solution in self.results) / len(self.results)
         desvio = (fo_media - self.best_cost) / self.best_cost * 100
         # Atualize o relatório

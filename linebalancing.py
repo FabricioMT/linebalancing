@@ -87,13 +87,12 @@ def printdata(Data: Data):
     
     #print('Maquinas:',Data.machines)
     #for task in graph.task: print(f'Tarefa {task.task_id}: Custo = {task.cost} Pred = {[pred.task_id for pred in task.pred]} Suces = {[succ.task_id for succ in task.succ]}')
-    print('\n')
     #print('pair_cost:',Data.pair_cost.items())
     for machine in Data.machines: print(f'Maquina: [{machine.key}] Tarefas Atendidas: {machine.jobs}\nCusto total da Maquina: {machine.total_cost}')
     print('\n')
     print('Maior FO:',calculate_makespan(Data.machines))
 
-    
+
 if __name__ == '__main__':
 
     start = timer()
@@ -120,5 +119,5 @@ if __name__ == '__main__':
     end = timer()
     timing = timedelta(seconds=end-start)
   
-    print(f"\n Tempo de Execução: {timing.microseconds} Micro Seconds\n")
+    print(f"\n Tempo de Execução TOTAL: {timing.seconds} Seconds\n")
 
